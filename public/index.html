@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>workOS — Gerenciador de Projetos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --brand:#6C5CE7;--brand2:#A29BFE;--brand3:#4A3AB5;
+  --bg:#0F0F1A;--bg2:#161624;--bg3:#1E1E30;--bg4:#252538;
+  --surface2:#22223A;
+  --text:#F0F0FF;--text2:#A0A0C0;--text3:#6060A0;
+  --border:#2A2A45;--border2:#3A3A60;
+  --success:#00CEC9;--warning:#FDCB6E;--danger:#E17055;
+  --pink:#FD79A8;--green:#55EFC4;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Figtree',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+
+/* NAV */
+.topnav{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;z-index:100}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;color:var(--brand2);letter-spacing:-.5px}
+.logo-dots{display:flex;gap:3px}
+.logo-dot{width:9px;height:9px;border-radius:2px}
+.nav-search{flex:1;max-width:320px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0 12px;height:34px;display:flex;align-items:center;gap:8px;margin:0 auto}
+.nav-search input{background:none;border:none;outline:none;color:var(--text);font-size:13px;width:100%;font-family:inherit}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:15px;transition:.15s;user-select:none}
+.nav-btn:hover{background:var(--bg4);color:var(--text)}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--pink));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;color:#fff}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:230px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sidebar-top{padding:12px 8px;border-bottom:1px solid var(--border)}
+.ws-pill{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:.15s}
+.ws-pill:hover{background:var(--bg3)}
+.ws-icon{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;color:#fff}
+.ws-name{font-size:13px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-nav{padding:8px;flex:1;overflow-y:auto}
+.sidebar-nav::-webkit-scrollbar{width:4px}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.nav-section{margin-bottom:8px}
+.nav-label{font-size:11px;color:var(--text3);padding:8px 10px 4px;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:.15s;font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;user-select:none}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--surface2);color:var(--text);font-weight:600}
+.nav-item .badge{margin-left:auto;background:var(--brand);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* BOARD HEADER */
+.board-header{padding:16px 20px 0;background:var(--bg);flex-shrink:0}
+.board-title-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.board-emoji{font-size:22px}
+.board-title{font-size:21px;font-weight:700;letter-spacing:-.5px;border:1px solid transparent;border-radius:6px;padding:2px 6px;outline:none;transition:.15s;cursor:text}
+.board-title:hover{border-color:var(--border);background:var(--bg3)}
+.board-title:focus{border-color:var(--brand);background:var(--bg3)}
+.board-sub{font-size:13px;color:var(--text3)}
+.board-tabs{display:flex;border-bottom:1px solid var(--border)}
+.tab{padding:8px 14px;font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;display:flex;align-items:center;gap:6px;user-select:none}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--brand2);border-bottom-color:var(--brand2);font-weight:600}
+
+/* STATS */
+.stats-bar{display:flex;gap:8px;padding:10px 20px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.stat{padding:4px 12px;border-radius:8px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px}
+.stat .n{font-size:14px;font-weight:700}
+
+/* TOOLBAR */
+.toolbar{padding:10px 20px;display:flex;align-items:center;gap:8px;background:var(--bg);flex-shrink:0;flex-wrap:wrap}
+.btn{height:32px;padding:0 14px;border-radius:8px;border:none;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s;font-family:inherit;white-space:nowrap}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand3)}
+.btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--bg4);color:var(--text)}
+.btn-ghost{background:transparent;color:var(--text2)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.tsep{width:1px;height:20px;background:var(--border);margin:0 4px}
+
+/* BOARD */
+.board-area{flex:1;overflow:auto;padding:12px 20px 20px}
+.board-area::-webkit-scrollbar{width:6px;height:6px}
+.board-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.group-wrap{margin-bottom:16px}
+.group-hdr{display:flex;align-items:center;gap:8px;padding:8px 4px;cursor:pointer;border-radius:6px;transition:.15s;user-select:none}
+.group-hdr:hover{background:var(--bg3)}
+.group-hdr:hover .grp-acts{opacity:1}
+.grp-bar{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.grp-name{font-size:13px;font-weight:600}
+.grp-count{font-size:12px;color:var(--text3);background:var(--bg3);padding:1px 7px;border-radius:10px}
+.grp-chev{color:var(--text3);font-size:11px;transition:.2s}
+.grp-acts{margin-left:auto;display:flex;gap:6px;opacity:0;transition:.15s}
+.grp-btn{font-size:11px;color:var(--brand2);cursor:pointer;padding:2px 8px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);transition:.15s}
+.grp-btn:hover{background:var(--bg4)}
+.grp-menu{font-size:16px;color:var(--text3);cursor:pointer;padding:0 6px;border-radius:4px;transition:.15s}
+.grp-menu:hover{background:var(--bg4);color:var(--text)}
+
+.table-wrap{border-left:3px solid var(--grp-color,var(--brand));border-radius:0 0 8px 8px;margin-left:1px;overflow-x:auto}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;min-width:700px}
+.tbl thead th{font-size:11px;font-weight:600;color:var(--text3);text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg2);text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0;z-index:5}
+.tbl thead th:first-child{width:36px}
+.tbl thead th.cn{min-width:220px}
+.tbl tbody tr{cursor:pointer}
+.tbl tbody tr:hover td{background:var(--bg3)!important}
+.tbl tbody tr td{padding:0;border-bottom:1px solid var(--border);font-size:13px;background:var(--bg2)}
+.cell{padding:8px 10px;display:flex;align-items:center;min-height:40px}
+.cell-ck{width:36px;justify-content:center}
+input[type=checkbox]{width:14px;height:14px;accent-color:var(--brand);cursor:pointer}
+
+.t-title{font-weight:500;color:var(--text)}
+.edit-hint{opacity:0;font-size:11px;color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:4px;transition:.15s;margin-left:8px;white-space:nowrap}
+.edit-hint:hover{background:var(--bg4);color:var(--brand2)}
+.tbl tbody tr:hover .edit-hint{opacity:1}
+
+.sbadge{padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;transition:.15s}
+.sbadge:hover{filter:brightness(1.15)}
+.s-done{background:#0D3A2D;color:#00CEC9}
+.s-inprog{background:#1A2050;color:#A29BFE}
+.s-review{background:#2A1A3A;color:#FD79A8}
+.s-todo{background:#1E1E30;color:#636e72}
+.s-stuck{background:#3A1A1A;color:#E17055}
+
+.pbadge{padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap}
+.p-critical{background:#4A1A1A;color:#FF7675}
+.p-high{background:#3A2A10;color:#FDCB6E}
+.p-medium{background:#1A2A3A;color:#74B9FF}
+.p-low{background:#1A2A1A;color:#55EFC4}
+.p-none{background:var(--bg3);color:var(--text3)}
+
+.date-cell{font-size:12px;color:var(--text2)}
+.date-cell.ov{color:var(--danger)}
+.date-cell.td{color:var(--warning);font-weight:600}
+
+.av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid var(--bg2);flex-shrink:0}
+.av-name{font-size:12px;color:var(--text2);margin-left:6px}
+
+.prog-wrap{flex:1;background:var(--bg3);height:8px;border-radius:4px;overflow:hidden;min-width:60px}
+.prog-bar{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:.3s}
+
+.add-row{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;color:var(--text3);font-size:13px;border-bottom:1px solid var(--border);transition:.15s;background:var(--bg2)}
+.add-row:hover{background:var(--bg3);color:var(--brand2)}
+
+/* LOADING/EMPTY */
+.loading{display:flex;align-items:center;justify-content:center;height:200px;color:var(--text3);font-size:14px;gap:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.empty{padding:60px 20px;text-align:center;color:var(--text3)}
+.empty h3{font-size:16px;color:var(--text2);margin-bottom:8px}
+@keyframes ri{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.ri{animation:ri .2s ease}
+
+/* DROPDOWN */
+.drop{position:fixed;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;box-shadow:var(--shadow);z-index:9999;min-width:160px;padding:4px;display:none}
+.di{padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px;transition:.15s;white-space:nowrap}
+.di:hover{background:var(--surface2);color:var(--text)}
+.di.danger{color:var(--danger)}
+.dsep{height:1px;background:var(--border);margin:4px 8px}
+
+/* MODALS */
+.ov-modal{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.ov-modal.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:600px;max-width:95vw;max-height:85vh;overflow:hidden;display:flex;flex-direction:column}
+@keyframes mi{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal{animation:mi .2s ease}
+.modal-sm{width:420px}
+.mhdr{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.mtitle{font-size:16px;font-weight:700;flex:1}
+.mclose{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.mclose:hover{background:var(--bg4);color:var(--text)}
+.mbody{padding:20px 24px;overflow-y:auto;flex:1}
+.mbody::-webkit-scrollbar{width:4px}
+.mbody::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.mfoot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+.fg{margin-bottom:16px}
+.fl{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.5px}
+.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:.15s;resize:vertical}
+.fi:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(108,92,231,.15)}
+.fs{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none;cursor:pointer;transition:.15s}
+.fs:focus{border-color:var(--brand)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.color-grid{display:flex;gap:8px;flex-wrap:wrap}
+.co{width:28px;height:28px;border-radius:6px;cursor:pointer;border:3px solid transparent;transition:.15s}
+.co:hover{transform:scale(1.1)}
+.co.sel{border-color:white!important}
+
+/* AI */
+.ai-chat{min-height:160px;max-height:260px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:10px}
+.ai-chat::-webkit-scrollbar{width:4px}
+.ai-chat::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.bai{background:var(--surface2);border-radius:10px;padding:12px;font-size:13px;color:var(--text);line-height:1.6}
+.buser{background:var(--brand);border-radius:10px;padding:10px 12px;font-size:13px;color:#fff;align-self:flex-end;max-width:80%;margin-left:auto;line-height:1.5}
+.asugg{font-size:11px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text2);transition:.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.asugg:hover{border-color:var(--brand);color:var(--text)}
+
+/* TOAST */
+.tc{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--bg4);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--text);display:flex;align-items:flex-start;gap:10px;box-shadow:var(--shadow);min-width:260px;pointer-events:all}
+.ti{font-size:16px;flex-shrink:0;margin-top:1px}
+.tt .ttn{font-weight:600;margin-bottom:2px}
+.tt .ttm{color:var(--text2);font-size:12px}
+@keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastOut{to{transform:translateX(110%);opacity:0}}
+.toast{animation:toastIn .25s ease}
+
+/* DB indicator */
+.db-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;margin-right:4px}
+.db-dot.err{background:var(--danger)}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="logo">
+    <div class="logo-dots">
+      <div class="logo-dot" style="background:#E17055"></div>
+      <div class="logo-dot" style="background:#6C5CE7"></div>
+      <div class="logo-dot" style="background:#00CEC9"></div>
+    </div>
+    workOS
+  </div>
+  <div class="nav-search">
+    <span style="color:var(--text3)">🔍</span>
+    <input id="gSearch" type="text" placeholder="Buscar tarefas, responsáveis...">
+  </div>
+  <div class="nav-right">
+    <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px">
+      <span class="db-dot" id="dbDot"></span><span id="dbLabel">Conectando...</span>
+    </span>
+    <div class="nav-btn">🔔</div>
+    <div class="nav-btn">⚙️</div>
+    <div class="avatar">EU</div>
+  </div>
+</nav>
+
+<div class="app-body">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="ws-pill">
+        <div class="ws-icon">W</div>
+        <span class="ws-name">Meu Workspace</span>
+        <span style="color:var(--text3);font-size:12px;margin-left:auto">▾</span>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-item active">📋 <span>Boards</span></div>
+        <div class="nav-item">📥 <span>Inbox</span> <span class="badge" id="inboxBadge">0</span></div>
+        <div class="nav-item">✅ <span>Meu Trabalho</span></div>
+        <div class="nav-item">⭐ <span>Favoritos</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Boards</div>
+        <div id="boardList"></div>
+        <div class="nav-item" onclick="openNewBoard()" style="color:var(--brand2);font-weight:600">＋ <span>Novo Board</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Dashboards</div>
+        <div class="nav-item">📊 <span>Overview</span></div>
+        <div class="nav-item">📈 <span>Relatórios</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="board-header">
+      <div class="board-title-row">
+        <span class="board-emoji" id="bEmoji">📋</span>
+        <span class="board-title" id="bTitle" contenteditable="true" spellcheck="false" onblur="saveBoardName(this)">Carregando...</span>
+        <span class="board-sub" id="bSub">0 itens</span>
+      </div>
+      <div class="board-tabs">
+        <div class="tab active">📋 Tabela</div>
+        <div class="tab" onclick="toast('info','Kanban','Em breve')">📌 Kanban</div>
+        <div class="tab" onclick="toast('info','Gantt','Em breve')">📅 Gantt</div>
+        <div class="tab" onclick="toast('info','Calendário','Em breve')">🗓 Calendário</div>
+        <div class="tab" onclick="toast('info','Dashboard','Em breve')">📊 Dashboard</div>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat" style="background:#0D3A2D;color:#00CEC9"><span class="n" id="n-done">0</span>Concluídas</div>
+      <div class="stat" style="background:#1A2050;color:#A29BFE"><span class="n" id="n-inprog">0</span>Em Progresso</div>
+      <div class="stat" style="background:#2A1A3A;color:#FD79A8"><span class="n" id="n-review">0</span>Em Revisão</div>
+      <div class="stat" style="background:#3A1A1A;color:#E17055"><span class="n" id="n-stuck">0</span>Bloqueadas</div>
+      <div class="stat" style="background:var(--bg3);color:var(--text3)"><span class="n" id="n-todo">0</span>A Fazer</div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openNewTask()">＋ Nova Tarefa</button>
+      <button class="btn btn-secondary" onclick="openNewGroup()">＋ Grupo</button>
+      <div class="tsep"></div>
+      <button class="btn btn-ghost" onclick="toast('info','Filtro','Em breve')">🔎 Filtro</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">⬆ Exportar CSV</button>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;color:var(--text3)" id="aiStat"></span>
+        <button class="btn btn-secondary" onclick="openAI()" style="border-color:var(--brand2);color:var(--brand2)">✨ IA Assistente</button>
+      </div>
+    </div>
+
+    <div class="board-area" id="boardArea">
+      <div class="loading" id="loadEl"><div class="spin"></div>Carregando board...</div>
+    </div>
+  </main>
+</div>
+
+<!-- TASK MODAL -->
+<div class="ov-modal" id="taskModal">
+  <div class="modal">
+    <div class="mhdr"><span>✅</span><span class="mtitle" id="taskMTitle">Nova Tarefa</span><button class="mclose" onclick="closeM('taskModal')">✕</button></div>
+    <div class="mbody">
+      <div class="fg"><label class="fl">Nome da Tarefa *</label><input class="fi" id="tName" placeholder="Ex: Redesign da landing page"/></div>
+      <div class="fg"><label class="fl">Descrição</label><textarea class="fi" id="tDesc" rows="3" placeholder="Detalhes e contexto da tarefa..."></textarea></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Status</label>
+          <select class="fs" id="tStatus">
+            <option value="todo">○ A Fazer</option>
+            <option value="inprog">⏳ Em Progresso</option>
+            <option value="review">👁 Em Revisão</option>
+            <option value="done">✓ Concluída</option>
+            <option value="stuck">⛔ Bloqueada</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Prioridade</label>
+          <select class="fs" id="tPriority">
+            <option value="none">— Sem prioridade</option>
+            <option value="low">🟢 Baixa</option>
+            <option value="medium">🔵 Média</option>
+            <option value="high">🟠 Alta</option>
+            <option value="critical">🔴 Crítica</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Responsável</label><input class="fi" id="tAssignee" placeholder="Nome do responsável"/></div>
+        <div class="fg"><label class="fl">Prazo</label><input class="fi" type="date" id="tDue"/></div>
+      </div>
+      <div class="fg"><label class="fl">Grupo</label><select class="fs" id="tGroup"></select></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeM('taskModal')">Cancelar</button>
+      <button class="btn btn-primary" id="saveTaskBtn" onclick="saveTask()">Salvar Tarefa</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOARD MODAL -->
+<div class="ov-modal" id="boardModal">
+  <div class="modal modal-sm">
+    <div class="mhdr"><span>📋</span><span class="mtitle">Novo Board</span><button class="mclose" onclick="closeM('boardModal')">✕</button></div>
+    <div class="mbody">
+      <div class="fg"><label class="fl">Nome do Board *</label><input class="fi" id="bName" placeholder="Ex: Projetos Q2 2026"/></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Emoji</label><input class="fi" id="bEmoji2" placeholder="📋" style="font-size:22px;text-align:center" maxlength="2"/></div>
+        <div class="fg"><label class="fl">Tipo</label>
+          <select class="fs">
+            <option>Projetos</option><option>CRM</option><option>Tarefas</option><option>Sprints</option><option>Marketing</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeM('boardModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="createBoard()">Criar Board</button>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP MODAL -->
+<div class="ov-modal" id="groupModal">
+  <div class="modal modal-sm">
+    <div class="mhdr"><span>📁</span><span class="mtitle" id="grpMTitle">Novo Grupo</span><button class="mclose" onclick="closeM('groupModal')">✕</button></div>
+    <div class="mbody">
+      <div class="fg"><label class="fl">Nome do Grupo *</label><input class="fi" id="grpName" placeholder="Ex: Sprint 3 — Maio"/></div>
+      <div class="fg"><label class="fl">Cor</label>
+        <div class="color-grid" id="colorGrid">
+          <div class="co sel" data-c="#6C5CE7" style="background:#6C5CE7"></div>
+          <div class="co" data-c="#00CEC9" style="background:#00CEC9"></div>
+          <div class="co" data-c="#E17055" style="background:#E17055"></div>
+          <div class="co" data-c="#FDCB6E" style="background:#FDCB6E"></div>
+          <div class="co" data-c="#FD79A8" style="background:#FD79A8"></div>
+          <div class="co" data-c="#74B9FF" style="background:#74B9FF"></div>
+          <div class="co" data-c="#55EFC4" style="background:#55EFC4"></div>
+          <div class="co" data-c="#A29BFE" style="background:#A29BFE"></div>
+          <div class="co" data-c="#E67E22" style="background:#E67E22"></div>
+          <div class="co" data-c="#2ecc71" style="background:#2ecc71"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeM('groupModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveGroup()">Salvar Grupo</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI MODAL -->
+<div class="ov-modal" id="aiModal">
+  <div class="modal" style="width:560px">
+    <div class="mhdr">
+      <span>✨</span><span class="mtitle">IA Assistente</span>
+      <button class="btn btn-ghost" style="height:26px;padding:0 10px;font-size:12px;margin-left:auto;margin-right:8px" onclick="document.getElementById('aiChat').innerHTML='<div class=bai>Chat limpo! 🤖</div>'">Limpar</button>
+      <button class="mclose" onclick="closeM('aiModal')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="ai-chat" id="aiChat">
+        <div class="bai">👋 Olá! Sou seu assistente IA com acesso ao seu banco de dados em tempo real.<br><br>Posso analisar seus projetos, criar tarefas, identificar gargalos e muito mais!</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input class="fi" id="aiInp" placeholder="Ex: Quais tarefas estão bloqueadas?" style="flex:1" onkeydown="if(event.key==='Enter')sendAI()"/>
+        <button class="btn btn-primary" id="aiBtn" onclick="sendAI()">✈</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="asugg" onclick="setAI('Resuma o board com pontos de atenção')">📊 Resumir</span>
+        <span class="asugg" onclick="setAI('Quais tarefas estão atrasadas ou bloqueadas?')">⚠ Críticas</span>
+        <span class="asugg" onclick="setAI('Crie 5 tarefas para lançamento de app mobile')">🚀 Gerar tarefas</span>
+        <span class="asugg" onclick="setAI('Analise a distribuição de trabalho da equipe')">👥 Equipe</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="drop" id="drop"></div>
+<div class="tc" id="tc"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const API = '';  // mesmo host — troque por http://localhost:3000 em dev local
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let boards = [], boardId = null, groups = [];
+let grpColor = '#6C5CE7', editTaskId = null, editGrpId = null, editGrpOrig = null;
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+async function init(){
+  try{
+    const bs = await api('GET','/api/boards');
+    boards = bs;
+    const saved = localStorage.getItem('wos_board');
+    boardId = boards.find(b=>b.id===saved)?.id || boards[0]?.id;
+    renderSidebar();
+    if(boardId) await loadBoard(boardId);
+    setDB(true);
+  }catch(e){setDB(false);console.error(e);}
+}
+
+function setDB(ok){
+  document.getElementById('dbDot').className='db-dot'+(ok?'':' err');
+  document.getElementById('dbLabel').textContent=ok?'BD Online':'BD Offline';
+}
+
+// ── API ──────────────────────────────────────────────────────────────────────
+async function api(method, url, body){
+  const r = await fetch(API+url,{
+    method,
+    headers:{'Content-Type':'application/json'},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// ── SIDEBAR ──────────────────────────────────────────────────────────────────
+function renderSidebar(){
+  const list = document.getElementById('boardList');
+  list.innerHTML = '';
+  boards.forEach(b=>{
+    const d = document.createElement('div');
+    d.className = 'nav-item'+(b.id===boardId?' active':'');
+    d.innerHTML = `<span style="font-size:14px">${b.emoji||'📋'}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${esc(b.name)}</span>`;
+    d.onclick = ()=>loadBoard(b.id);
+    d.oncontextmenu = e=>{e.preventDefault();ctxBoard(e,b.id)};
+    list.appendChild(d);
+  });
+  // inbox = overdue
+  let ov=0;
+  groups.forEach(g=>g.tasks.forEach(t=>{if(t.due_date&&new Date(t.due_date)<new Date()&&t.status!=='done')ov++}));
+  document.getElementById('inboxBadge').textContent=ov||'0';
+}
+
+// ── LOAD BOARD ───────────────────────────────────────────────────────────────
+async function loadBoard(id){
+  boardId=id;
+  localStorage.setItem('wos_board',id);
+  const b=boards.find(x=>x.id===id);
+  if(!b)return;
+  document.getElementById('bEmoji').textContent=b.emoji||'📋';
+  document.getElementById('bTitle').textContent=b.name;
+  document.getElementById('loadEl').style.display='flex';
+  document.getElementById('boardArea').innerHTML='';
+  document.getElementById('boardArea').appendChild(document.getElementById('loadEl'));
+  try{
+    groups = await api('GET',`/api/boards/${id}/groups`);
+    renderSidebar();
+    renderBoard();
+    loadStats();
+  }catch(e){toast('error','Erro','Falha ao carregar o board');}
+}
+
+async function loadStats(){
+  try{
+    const s = await api('GET',`/api/boards/${boardId}/stats`);
+    ['done','inprog','review','stuck','todo'].forEach(k=>document.getElementById('n-'+k).textContent=s[k]||0);
+    document.getElementById('bSub').textContent=s.total+' ite'+(s.total===1?'m':'ns');
+  }catch{}
+}
+
+// ── RENDER BOARD ─────────────────────────────────────────────────────────────
+function renderBoard(){
+  const area=document.getElementById('boardArea');
+  const loader=document.getElementById('loadEl');
+  area.innerHTML='';
+  if(loader)area.appendChild(loader);
+  loader.style.display='none';
+  if(!groups.length){
+    area.innerHTML+='<div class="empty"><h3>Board vazio</h3><p>Clique em "+ Grupo" para começar</p></div>';
+    return;
+  }
+  groups.forEach(g=>area.appendChild(buildGroup(g)));
+}
+
+function buildGroup(g){
+  const w=document.createElement('div');
+  w.className='group-wrap';w.id='gw-'+g.id;
+  const hdr=document.createElement('div');
+  hdr.className='group-hdr';
+  hdr.innerHTML=`
+    <div class="grp-bar" style="background:${g.color}"></div>
+    <span class="grp-chev" id="gc-${g.id}">▾</span>
+    <span class="grp-name">${esc(g.name)}</span>
+    <span class="grp-count">${g.tasks.length}</span>
+    <div class="grp-acts">
+      <span class="grp-btn" onclick="event.stopPropagation();quickAdd('${g.id}')">+ Tarefa</span>
+      <span class="grp-menu" onclick="event.stopPropagation();ctxGrp(event,'${g.id}')">⋯</span>
+    </div>`;
+  hdr.onclick=()=>toggleGrp(g.id);
+
+  const tw=document.createElement('div');
+  tw.className='table-wrap';tw.id='tw-'+g.id;
+  tw.style.setProperty('--grp-color',g.color);
+
+  const tbl=document.createElement('table');tbl.className='tbl';
+  tbl.innerHTML=`<thead><tr>
+    <th></th><th class="cn">TAREFA</th><th>STATUS</th><th>PRIORIDADE</th>
+    <th>RESPONSÁVEL</th><th>PRAZO</th><th style="min-width:100px">PROGRESSO</th>
+  </tr></thead>`;
+
+  const tbody=document.createElement('tbody');
+  (g.tasks||[]).forEach(t=>tbody.appendChild(buildRow(t,g.id)));
+  const ar=document.createElement('tr');
+  ar.innerHTML=`<td colspan="7"><div class="add-row" onclick="quickAdd('${g.id}')">＋ Adicionar tarefa</div></td>`;
+  tbody.appendChild(ar);
+
+  tbl.appendChild(tbody);tw.appendChild(tbl);
+  w.appendChild(hdr);w.appendChild(tw);
+  return w;
+}
+
+function buildRow(t,gid){
+  const tr=document.createElement('tr');tr.className='ri';tr.id='row-'+t.id;
+  const sc={done:'s-done',inprog:'s-inprog',review:'s-review',todo:'s-todo',stuck:'s-stuck'}[t.status]||'s-todo';
+  const pc={critical:'p-critical',high:'p-high',medium:'p-medium',low:'p-low',none:'p-none'}[t.priority]||'p-none';
+  const sl={done:'✓ Concluída',inprog:'⏳ Em Progresso',review:'👁 Em Revisão',todo:'○ A Fazer',stuck:'⛔ Bloqueada'};
+  const pl={critical:'🔴 Crítica',high:'🟠 Alta',medium:'🔵 Média',low:'🟢 Baixa',none:'— Sem prioridade'};
+  const di=dueFmt(t.due_date);
+  const ini=t.assignee?t.assignee.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase():'';
+  const avC=['#6C5CE7','#00CEC9','#E17055','#FD79A8','#74B9FF','#FDCB6E'];
+  const avc=avC[t.assignee?t.assignee.charCodeAt(0)%avC.length:0];
+  const prog={done:100,inprog:50,review:75,stuck:20,todo:5}[t.status]||5;
+  tr.innerHTML=`
+    <td><div class="cell cell-ck"><input type="checkbox" ${t.status==='done'?'checked':''} onclick="event.stopPropagation()" onchange="chkDone('${t.id}','${gid}',this)"></div></td>
+    <td><div class="cell"><span class="t-title" style="${t.status==='done'?'text-decoration:line-through;opacity:.6':''}">${esc(t.name)}</span><span class="edit-hint" onclick="event.stopPropagation();openEditTask('${t.id}','${gid}')">✏ Editar</span></div></td>
+    <td><div class="cell"><span class="sbadge ${sc}" onclick="event.stopPropagation();statusMenu(event,'${t.id}','${gid}')">${sl[t.status]||'○ A Fazer'}</span></div></td>
+    <td><div class="cell"><span class="pbadge ${pc}">${pl[t.priority]||'—'}</span></div></td>
+    <td><div class="cell">${ini?`<div class="av" style="background:${avc}" title="${esc(t.assignee)}">${ini}</div><span class="av-name">${esc(t.assignee)}</span>`:'<span style="color:var(--text3);font-size:12px">—</span>'}</div></td>
+    <td><div class="cell"><span class="date-cell ${di.cls}">${di.lbl}</span></div></td>
+    <td><div class="cell"><div class="prog-wrap"><div class="prog-bar" style="width:${prog}%"></div></div></div></td>`;
+  tr.onclick=()=>openEditTask(t.id,gid);
+  return tr;
+}
+
+function dueFmt(d){
+  if(!d)return{lbl:'—',cls:''};
+  const dt=new Date(d),n=new Date();n.setHours(0,0,0,0);dt.setHours(0,0,0,0);
+  const diff=Math.round((dt-n)/86400000);
+  if(diff<0)return{lbl:d+' ⚠',cls:'ov'};
+  if(diff===0)return{lbl:'Hoje',cls:'td'};
+  if(diff===1)return{lbl:'Amanhã',cls:'td'};
+  return{lbl:d,cls:''};
+}
+function esc(s){return s?(s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
+
+// ── TASK ACTIONS ─────────────────────────────────────────────────────────────
+async function chkDone(tid,gid,el){
+  el.disabled=true;
+  try{
+    const t=await api('PUT',`/api/tasks/${tid}`,{status:el.checked?'done':'todo'});
+    updateGroupTask(gid,t);
+    const row=document.getElementById('row-'+tid);
+    if(row)row.replaceWith(buildRow(t,gid));
+    loadStats();
+    toast(el.checked?'success':'info',el.checked?'Concluída!':'Reaberta',t.name);
+  }catch{el.checked=!el.checked;}
+  el.disabled=false;
+}
+
+async function statusMenu(e,tid,gid){
+  const opts=[
+    {v:'todo',l:'○ A Fazer',c:'s-todo'},{v:'inprog',l:'⏳ Em Progresso',c:'s-inprog'},
+    {v:'review',l:'👁 Em Revisão',c:'s-review'},{v:'done',l:'✓ Concluída',c:'s-done'},{v:'stuck',l:'⛔ Bloqueada',c:'s-stuck'}
+  ];
+  showDrop(e,opts.map(o=>`<div class="di" onclick="setStatus('${tid}','${gid}','${o.v}');closeDrop()"><span class="sbadge ${o.c}" style="font-size:11px">${o.l}</span></div>`).join(''));
+}
+
+async function setStatus(tid,gid,status){
+  try{
+    const t=await api('PUT',`/api/tasks/${tid}`,{status});
+    updateGroupTask(gid,t);
+    const row=document.getElementById('row-'+tid);
+    if(row)row.replaceWith(buildRow(t,gid));
+    loadStats();
+  }catch(e){toast('error','Erro','Falha ao atualizar status');}
+}
+
+async function quickAdd(gid){
+  const name=prompt('Nome da nova tarefa:');
+  if(!name?.trim())return;
+  try{
+    const t=await api('POST',`/api/groups/${gid}/tasks`,{name:name.trim()});
+    const g=groups.find(x=>x.id===gid);
+    if(g){g.tasks.push(t);}
+    const tbody=document.querySelector('#tw-'+gid+' tbody');
+    if(tbody){const addRow=tbody.lastElementChild;tbody.insertBefore(buildRow(t,gid),addRow);}
+    document.querySelector('#gw-'+gid+' .grp-count').textContent=(g?.tasks.length)||'?';
+    loadStats();
+    toast('success','Tarefa criada!',t.name);
+  }catch{toast('error','Erro','Falha ao criar tarefa');}
+}
+
+function updateGroupTask(gid,t){
+  const g=groups.find(x=>x.id===gid);
+  if(g){const idx=g.tasks.findIndex(x=>x.id===t.id);if(idx>=0)g.tasks[idx]=t;}
+}
+
+function toggleGrp(gid){
+  const tw=document.getElementById('tw-'+gid),ch=document.getElementById('gc-'+gid);
+  const h=tw.style.display==='none';
+  tw.style.display=h?'block':'none';
+  ch.textContent=h?'▾':'▸';
+}
+
+// ── TASK MODAL ───────────────────────────────────────────────────────────────
+function openNewTask(){
+  editTaskId=null;editGrpOrig=null;
+  document.getElementById('taskMTitle').textContent='Nova Tarefa';
+  document.getElementById('tName').value='';
+  document.getElementById('tDesc').value='';
+  document.getElementById('tStatus').value='todo';
+  document.getElementById('tPriority').value='none';
+  document.getElementById('tAssignee').value='';
+  document.getElementById('tDue').value='';
+  fillGrpSel(null);
+  openM('taskModal');setTimeout(()=>document.getElementById('tName').focus(),100);
+}
+
+function openEditTask(tid,gid){
+  const g=groups.find(x=>x.id===gid);
+  const t=g?.tasks.find(x=>x.id===tid);
+  if(!t)return;
+  editTaskId=tid;editGrpOrig=gid;
+  document.getElementById('taskMTitle').textContent='Editar Tarefa';
+  document.getElementById('tName').value=t.name;
+  document.getElementById('tDesc').value=t.description||'';
+  document.getElementById('tStatus').value=t.status||'todo';
+  document.getElementById('tPriority').value=t.priority||'none';
+  document.getElementById('tAssignee').value=t.assignee||'';
+  document.getElementById('tDue').value=t.due_date||'';
+  fillGrpSel(gid);
+  openM('taskModal');setTimeout(()=>document.getElementById('tName').focus(),100);
+}
+
+function fillGrpSel(sel){
+  document.getElementById('tGroup').innerHTML=groups.map(g=>`<option value="${g.id}" ${g.id===sel?'selected':''}>${esc(g.name)}</option>`).join('');
+}
+
+async function saveTask(){
+  const name=document.getElementById('tName').value.trim();
+  if(!name){toast('error','Ops!','Nome da tarefa é obrigatório');return;}
+  const body={
+    name,description:document.getElementById('tDesc').value,
+    status:document.getElementById('tStatus').value,
+    priority:document.getElementById('tPriority').value,
+    assignee:document.getElementById('tAssignee').value,
+    due_date:document.getElementById('tDue').value,
+    group_id:document.getElementById('tGroup').value
+  };
+  const btn=document.getElementById('saveTaskBtn');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    if(editTaskId){
+      const t=await api('PUT',`/api/tasks/${editTaskId}`,body);
+      // move between groups if needed
+      const ngid=body.group_id;
+      if(editGrpOrig!==ngid){
+        const og=groups.find(x=>x.id===editGrpOrig);
+        const ng=groups.find(x=>x.id===ngid);
+        if(og)og.tasks=og.tasks.filter(x=>x.id!==editTaskId);
+        if(ng)ng.tasks.push(t);
+      }else{
+        updateGroupTask(editGrpOrig,t);
+      }
+      toast('info','Atualizado!',name);
+    }else{
+      const ngid=body.group_id;
+      const t=await api('POST',`/api/groups/${ngid}/tasks`,body);
+      const g=groups.find(x=>x.id===ngid);if(g)g.tasks.push(t);
+      toast('success','Tarefa criada!',name);
+    }
+    closeM('taskModal');renderBoard();loadStats();
+  }catch(e){toast('error','Erro','Falha ao salvar tarefa');}
+  btn.disabled=false;btn.textContent='Salvar Tarefa';
+}
+
+// ── BOARD MODAL ──────────────────────────────────────────────────────────────
+function openNewBoard(){
+  document.getElementById('bName').value='';
+  document.getElementById('bEmoji2').value='📋';
+  openM('boardModal');setTimeout(()=>document.getElementById('bName').focus(),100);
+}
+
+async function createBoard(){
+  const name=document.getElementById('bName').value.trim();
+  if(!name){toast('error','Ops!','Nome do board é obrigatório');return;}
+  const emoji=document.getElementById('bEmoji2').value.trim()||'📋';
+  try{
+    const b=await api('POST','/api/boards',{name,emoji});
+    boards.push(b);closeM('boardModal');
+    await loadBoard(b.id);
+    toast('success','Board criado!',name);
+  }catch{toast('error','Erro','Falha ao criar board');}
+}
+
+async function saveBoardName(el){
+  const b=boards.find(x=>x.id===boardId);
+  const n=el.textContent.trim();
+  if(!b||!n)return;
+  try{await api('PUT',`/api/boards/${boardId}`,{name:n});b.name=n;renderSidebar();}catch{}
+}
+
+// ── GROUP MODAL ───────────────────────────────────────────────────────────────
+function openNewGroup(){
+  editGrpId=null;grpColor='#6C5CE7';
+  document.getElementById('grpMTitle').textContent='Novo Grupo';
+  document.getElementById('grpName').value='';
+  document.querySelectorAll('.co').forEach(x=>x.classList.toggle('sel',x.dataset.c===grpColor));
+  openM('groupModal');setTimeout(()=>document.getElementById('grpName').focus(),100);
+}
+
+async function saveGroup(){
+  const name=document.getElementById('grpName').value.trim();
+  if(!name){toast('error','Ops!','Nome do grupo é obrigatório');return;}
+  try{
+    if(editGrpId){
+      const g=await api('PUT',`/api/groups/${editGrpId}`,{name,color:grpColor});
+      const idx=groups.findIndex(x=>x.id===editGrpId);
+      if(idx>=0){groups[idx]={...groups[idx],name:g.name,color:g.color};}
+      toast('info','Grupo atualizado',name);
+    }else{
+      const g=await api('POST',`/api/boards/${boardId}/groups`,{name,color:grpColor});
+      g.tasks=[];groups.push(g);
+      toast('success','Grupo criado!',name);
+    }
+    closeM('groupModal');renderBoard();
+  }catch{toast('error','Erro','Falha ao salvar grupo');}
+}
+
+function ctxGrp(e,gid){
+  showDrop(e,`
+    <div class="di" onclick="renGrp('${gid}');closeDrop()">✏ Renomear</div>
+    <div class="di" onclick="quickAdd('${gid}');closeDrop()">＋ Tarefa</div>
+    <div class="dsep"></div>
+    <div class="di danger" onclick="delGrp('${gid}');closeDrop()">🗑 Deletar grupo</div>`);
+}
+
+function renGrp(gid){
+  const g=groups.find(x=>x.id===gid);if(!g)return;
+  editGrpId=gid;grpColor=g.color;
+  document.getElementById('grpMTitle').textContent='Renomear Grupo';
+  document.getElementById('grpName').value=g.name;
+  document.querySelectorAll('.co').forEach(x=>x.classList.toggle('sel',x.dataset.c===g.color));
+  openM('groupModal');setTimeout(()=>document.getElementById('grpName').focus(),100);
+}
+
+async function delGrp(gid){
+  if(!confirm('Deletar este grupo e todas as tarefas?'))return;
+  try{
+    await api('DELETE',`/api/groups/${gid}`);
+    groups=groups.filter(x=>x.id!==gid);
+    renderBoard();loadStats();
+    toast('info','Grupo deletado','Removido do banco de dados');
+  }catch{toast('error','Erro','Falha ao deletar grupo');}
+}
+
+function ctxBoard(e,bid){
+  showDrop(e,`
+    <div class="di" onclick="loadBoard('${bid}');closeDrop()">📋 Abrir</div>
+    <div class="di" onclick="renBoard('${bid}');closeDrop()">✏ Renomear</div>
+    <div class="dsep"></div>
+    <div class="di danger" onclick="delBoard('${bid}');closeDrop()">🗑 Deletar</div>`);
+}
+
+async function renBoard(bid){
+  const b=boards.find(x=>x.id===bid);if(!b)return;
+  const n=prompt('Novo nome:',b.name);
+  if(!n?.trim())return;
+  try{await api('PUT',`/api/boards/${bid}`,{name:n.trim()});b.name=n.trim();renderSidebar();if(bid===boardId)document.getElementById('bTitle').textContent=b.name;}catch{}
+}
+
+async function delBoard(bid){
+  if(boards.length<=1){toast('error','Ops!','Não é possível deletar o único board');return;}
+  if(!confirm('Deletar este board permanentemente?'))return;
+  try{
+    await api('DELETE',`/api/boards/${bid}`);
+    boards=boards.filter(x=>x.id!==bid);
+    if(boardId===bid){boardId=boards[0].id;}
+    renderSidebar();await loadBoard(boardId);
+    toast('info','Board deletado','Removido permanentemente');
+  }catch{toast('error','Erro','Falha ao deletar board');}
+}
+
+// ── EXPORT CSV ───────────────────────────────────────────────────────────────
+function exportCSV(){
+  const b=boards.find(x=>x.id===boardId);
+  let csv='Grupo,Tarefa,Status,Prioridade,Responsável,Prazo\n';
+  groups.forEach(g=>g.tasks.forEach(t=>{
+    csv+=`"${g.name}","${t.name}","${t.status}","${t.priority}","${t.assignee||''}","${t.due_date||''}"\n`;
+  }));
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\ufeff'+encodeURIComponent(csv);
+  a.download=(b?.name||'board').replace(/\s+/g,'_')+'.csv';
+  a.click();
+  toast('success','CSV exportado!','Arquivo baixado');
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+document.getElementById('gSearch').addEventListener('input',function(){
+  const q=this.value.toLowerCase().trim();
+  const area=document.getElementById('boardArea');
+  area.innerHTML='';
+  const filtered=q ? groups.map(g=>({...g,tasks:g.tasks.filter(t=>t.name.toLowerCase().includes(q)||(t.assignee||'').toLowerCase().includes(q))})).filter(g=>g.tasks.length) : groups;
+  filtered.forEach(g=>area.appendChild(buildGroup(g)));
+});
+
+// ── AI ────────────────────────────────────────────────────────────────────────
+function openAI(){openM('aiModal');setTimeout(()=>document.getElementById('aiInp').focus(),100)}
+function setAI(t){document.getElementById('aiInp').value=t;document.getElementById('aiInp').focus()}
+
+async function sendAI(){
+  const inp=document.getElementById('aiInp');
+  const msg=inp.value.trim();if(!msg)return;
+  inp.value='';
+  const btn=document.getElementById('aiBtn');
+  btn.disabled=true;btn.textContent='...';
+
+  const chat=document.getElementById('aiChat');
+  const b=boards.find(x=>x.id===boardId);
+  const summary=groups.map(g=>`Grupo "${g.name}" (${g.tasks.length} tarefas): ${g.tasks.filter(t=>t.status==='done').length} concluídas, ${g.tasks.filter(t=>t.status==='inprog').length} em progresso, ${g.tasks.filter(t=>t.status==='stuck').length} bloqueadas, ${g.tasks.filter(t=>t.due_date&&new Date(t.due_date)<new Date()&&t.status!=='done').length} atrasadas`).join('\n');
+  const taskList=groups.flatMap(g=>g.tasks).slice(0,40).map(t=>`- "${t.name}" [${t.status}|${t.priority}|resp:${t.assignee||'—'}|prazo:${t.due_date||'—'}]`).join('\n');
+
+  const ub=document.createElement('div');ub.className='buser';ub.textContent=msg;chat.appendChild(ub);
+  const lb=document.createElement('div');lb.className='bai';lb.innerHTML='<div class="spin" style="display:inline-block;margin-right:8px"></div>Analisando banco de dados...';
+  chat.appendChild(lb);chat.scrollTop=chat.scrollHeight;
+  document.getElementById('aiStat').textContent='✨ Processando...';
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:`Você é um assistente de gerenciamento de projetos do workOS com acesso em tempo real ao banco de dados SQLite.
+Board atual: "${b?.name}"
+Data: ${new Date().toLocaleDateString('pt-BR')}
+\nDados do banco:\n${summary}\nTarefas:\n${taskList}
+Responda em português, seja analítico e proativo. Use emojis. Se sugerir tarefas, liste com bullet points.`,
+        messages:[{role:'user',content:msg}]
+      })
+    });
+    const d=await r.json();
+    const txt=d.content?.find(c=>c.type==='text')?.text||'Não foi possível processar.';
+    lb.innerHTML=txt.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  }catch(e){lb.innerHTML='❌ Erro ao conectar com a IA.';lb.style.color='var(--danger)';}
+
+  btn.disabled=false;btn.textContent='✈';
+  document.getElementById('aiStat').textContent='';
+  chat.scrollTop=chat.scrollHeight;
+}
+
+// ── DROPDOWN ─────────────────────────────────────────────────────────────────
+function showDrop(e,html){
+  const d=document.getElementById('drop');
+  d.innerHTML=html;d.style.display='block';
+  d.style.left=Math.min(e.clientX,window.innerWidth-180)+'px';
+  d.style.top=Math.min(e.clientY+4,window.innerHeight-250)+'px';
+  setTimeout(()=>document.addEventListener('click',closeDrop,{once:true}),10);
+}
+function closeDrop(){document.getElementById('drop').style.display='none'}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function openM(id){document.getElementById(id).classList.add('open')}
+function closeM(id){document.getElementById(id).classList.remove('open')}
+
+// ── COLORS ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('.co').forEach(el=>{
+  el.onclick=()=>{
+    document.querySelectorAll('.co').forEach(x=>x.classList.remove('sel'));
+    el.classList.add('sel');grpColor=el.dataset.c;
+  };
+});
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(type,title,msg){
+  const ic={success:'✓',error:'✕',info:'ℹ',warning:'⚠'};
+  const cl={success:'#00CEC9',error:'#E17055',info:'#A29BFE',warning:'#FDCB6E'};
+  const tc=document.getElementById('tc');
+  const t=document.createElement('div');t.className='toast';
+  t.innerHTML=`<span class="ti" style="color:${cl[type]||'var(--text2)'}">${ic[type]}</span><div class="tt"><div class="ttn">${title}</div><div class="ttm">${msg}</div></div>`;
+  tc.appendChild(t);
+  setTimeout(()=>{t.style.animation='toastOut .3s ease forwards';setTimeout(()=>t.remove(),300)},3500);
+}
+
+// ── EVENTS ────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.ov-modal').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open')}));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')document.querySelectorAll('.ov-modal.open').forEach(m=>m.classList.remove('open'));
+  if(e.ctrlKey&&e.key==='n'){e.preventDefault();openNewTask();}
+});
+
+init();
+</script>
+</body>
+</html>
